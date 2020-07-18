@@ -11,8 +11,7 @@ env = environ.Env()
 # ---------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUG = env.bool("DEBUG", False)
-SECRET_KEY = env("SECRET_KEY")
-USE_SENTRY = env.bool("USE_SENTRY", False)
+SECRET_KEY = env.str("SECRET_KEY", "you-should-set-this-probably")
 
 # ---------
 # Basic Django settings
@@ -23,8 +22,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-# 100000000000000000
-# 100000000000000
 STATIC_URL = "/static/"
 STATIC_ROOT = env.str("STATIC_ROOT", os.path.join(BASE_DIR, "static"))
 
@@ -70,10 +67,10 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
-LIB_APPS = ["django_celery_beat"]
 PROJECT_APPS = ["core"]
+LIBRARY_APPS = ["bootstrap4"]
 
-INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + LIB_APPS
+INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + LIBRARY_APPS
 
 if DEBUG:
     INSTALLED_APPS += ["django.contrib.admin"]
@@ -85,9 +82,10 @@ if DEBUG:
 
 UPVEST_OAUTH_CLIENT_ID = env.str("UPVEST_OAUTH_CLIENT_ID")
 UPVEST_OAUTH_CLIENT_SECRET = env.str("UPVEST_OAUTH_CLIENT_SECRET")
-UPVEST_BACKEND = env.str("UPVEST_BACKEND", "https://api.playground.upvest.co/")
 UPVEST_USERNAME = env.str("UPVEST_USERNAME")
 UPVEST_PASSWORD = env.str("UPVEST_PASSWORD")
+UPVEST_BACKEND = env.str("UPVEST_BACKEND", "https://api.playground.upvest.co/")
+UPVEST_USER_AGENT = env.str("UPVEST_USER_AGENT", "upvest-faucet/default")
 
 # ---------
 # Greylisting
@@ -120,14 +118,19 @@ SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", False)
 # ---------
 # Databases
 # ---------
-DATABASES = {"default": env.db()}
-
-
-# ----------
-# Brokers
-# ----------
-
-# CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")
+if "DATABASE_URL" in os.environ:
+    DATABASES = {"default": env.db()}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "sqlite3.db"),
+            "USER": "",
+            "PASSWORD": "",
+            "HOST": "",
+            "PORT": "",
+        }
+    }
 
 
 # ----------
@@ -166,16 +169,6 @@ LOGGING = {
     },
 }
 
-if USE_SENTRY:
-    INSTALLED_APPS += ["raven.contrib.django.raven_compat"]
-    LOGGING["handlers"]["sentry"] = {
-        "level": "WARNING",
-        "class": "raven.contrib.django.raven_compat.handlers.SentryHandler",
-    }
-    RAVEN_CONFIG = {"dsn": env("SENTRY_DSN")}
-else:
-    RAVEN_CONFIG = {}
-
 if DEBUG:
     LOGGING["loggers"] = {
         "": {"handlers": ["verboseconsole"], "level": "INFO", "propagate": True},
@@ -183,11 +176,6 @@ if DEBUG:
     }
 else:
     handlers = ["console"]
-    # if SYSLOG_ADDRESS != "unset":
-    #     handlers += ["syslog"]
-    if USE_SENTRY:
-        handlers += ["sentry"]
-
     LOGGING["loggers"] = {
         "": {"handlers": handlers, "level": "WARN", "propagate": True},
         "faucet": {"handlers": handlers, "level": "INFO", "propagate": True},

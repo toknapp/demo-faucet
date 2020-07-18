@@ -1,45 +1,40 @@
-{% load static %}
+{% load bootstrap4 %}
+{% load staticfiles %}
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upvest Faucets</title>
+    <title>Upvest Examples : Faucet</title>
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/png" sizes="16x16">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    {% bootstrap_css %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% bootstrap_javascript jquery='full' %}
 </head>
 <body>
 
-    <nav class="navbar static-top">
-      <div class="container text-white">
-        <h1>Upvest Faucets</h1>
-      </div>
-    </nav>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Upvest Example Faucet</a>
+  </nav>
 
-      <div class="overlay"></div>
-      <div class="container">
-        <div class="row">
-          {% for faucet in faucets %}
-          <a class='btn btn-info' href="{% url 'faucet' faucet.asset_code %}">{{ faucet.asset_code }} {{ faucet.name }}</a>
-          {% endfor %}
+  {% bootstrap_messages %}
+
+  <div class="container mt-5">
+
+        <div class="row mb-5">
+          <div class="col-md-8">
+            {% for faucet in faucets %}
+            <a class='btn btn-info' href="{% url 'faucet' faucet.asset_code %}">{{ faucet.asset_code }} {{ faucet.name }}</a>
+            {% endfor %}
+          </div>
         </div>
         <div class="row">
-          <div class="col-xl-9 mx-auto">
+          <div class="col-md-8">
             <h3 class="mb-5">Use this faucet to get some {{ faucet.asset_code }}!</h3>
             <p>Upvest asset id: {{ faucet.asset_id }}</p>
           </div>
-          {% if messages %}
-            <div class="col-md-10 col-lg-8 col-xl-7 mx-auto ">
-              {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} {% if message.tags == 'error' %}alert-danger{% endif %}">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
-          <div class="col-md-10 col-lg-8 col-xl-7 mx-auto">
+          <div class="col-md-8">
             <form method="post">
               {% csrf_token %}
               <div class="form-row">
@@ -55,22 +50,24 @@
             </form>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-10 col-lg-8 col-xl-7 mx-auto">
+        <div class="row mt-5">
+          <div class="col-md-8">
             This will send {{ faucet.sending_amount.normalize }} {{ faucet.asset_code }} to the given address.
-            <br/> The faucet wallet currently has a balance of {{ faucet.balance }}{{ faucet.asset_code }}
-            <br/>Feel free to donate to the faucet wallet, {{ faucet.wallet_address }}
+            <br/> The faucet wallet currently has a balance of <strong>{{ balance }}{{ faucet.asset_code }}</strong>
+            <br/>Feel free to donate to the faucet wallet, {{ wallet.address }}
           </div>
+        </div>
           {% if tx %}
-            <div class="col-md-10 col-lg-8 col-xl-7 mx-auto alert alert-primary">
-              Success! {{ faucet.sending_amount.normalize }} {{ faucet.asset_code }} has been sent to {{ address }}.
-              Transaction is
-              <a href='https://ropsten.etherscan.io/tx/{{ tx.txhash }}'>
-                {{ tx.txhash }}
+          <div class="row mt-5">
+            <div class="col-md-8 alert alert-primary">
+              Success! {{ faucet.sending_amount.normalize }} {{ faucet.asset_code }} has been sent to your address.
+              View your transactions here
+              <a href='https://ropsten.etherscan.io/address/{{ address }}'>
+                {{ address }}
               </a>
             </div>
+          </div>
           {% endif %}
-        </div>
 
       </div>
 

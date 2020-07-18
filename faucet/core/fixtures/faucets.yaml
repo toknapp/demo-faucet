@@ -1,0 +1,16 @@
+- model: core.faucet
+  pk: 1
+  fields:
+    asset_code: ETH
+    name: Ethereum (Ropsten)
+    asset_id: deaaa6bf-d944-57fa-8ec4-2dd45d1f5d3f
+    sending_amount: '0.01'
+    fee: '0.0001'
+- model: core.faucet
+  pk: 2
+  fields:
+    asset_code: UP
+    name: Upvest Testing ERC20 Faucet (Ropsten)
+    asset_id: cf08564b-8fa3-5c88-a29b-029915471249
+    sending_amount: '1000000.0'
+    fee: '0.0001'

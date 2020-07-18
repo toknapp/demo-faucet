@@ -13,12 +13,11 @@ See the README for how to configure this faucet: https://github.com/upvestco/dem
 fi
 
 
-if [ -z "$UPVEST_USERNAME" ] || [ -z "$UPVEST_PASSWORD" ] || [ -z "$UPVEST_WALLET_ID" ]; then
+if [ -z "$UPVEST_USERNAME" ] || [ -z "$UPVEST_PASSWORD" ]; then
   echo "
 The credentials for the user and the wallet to use must be set as environment variables:
    UPVEST_USERNAME
    UPVEST_PASSWORD
-   UPVEST_WALLET_ID
 See the README for how to configure this faucet: https://github.com/upvestco/demo-faucet/README.md
 "
   exit 1
@@ -27,12 +26,12 @@ fi
 set -x
 
 echo "Migrating database"
-python manage.py migrate --no-input
+python manage.py migrate --no-input > /dev/null
 
 echo "Collecting static files"
-python manage.py collectstatic --no-input
+python manage.py collectstatic --no-input > /dev/null
 
 echo "Loading asset definitions"
-python manage.py loaddata assets
+python manage.py loaddata faucets > /dev/null
 
 gunicorn -c gunicorn.conf faucet.wsgi

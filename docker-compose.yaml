@@ -1,48 +1,23 @@
-version: '3'
+version: '2'
 
 services:
-
-  # data stores
-  db:
-    image: postgres
-    environment:
-      - POSTGRES_USER=faucet
-      - POSTGRES_PASSWORD=faucet
-      - POSTGRES_DB=faucet
-    ports:
-      - 6041:5432
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  broker:
-    image: rabbitmq:latest
-    ports:
-      - 60542:5672
-    volumes:
-      - rabbitdata:/var/lib/rabbitmq
-
   faucet:
     image: faucet:latest
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - 80:8000
     environment:
-      - DATABASE_URL=postgres://faucet:faucet@db:5432/faucet
-      - SECRET_KEY=secret_sshhh
       - STATIC_ROOT=/faucet/static/
       - UPVEST_OAUTH_CLIENT_ID
       - UPVEST_OAUTH_CLIENT_SECRET
       - UPVEST_USERNAME
       - UPVEST_PASSWORD
-      - UPVEST_WALLET_ID
-      - WHITELISTED_IPS=''
-      - WHITELISTED_HEADERS=''
-    depends_on:
-      - db
-      - broker
-
-volumes:
-  pgdata:
-  rabbitdata:
+      - WHITELISTED_IPS
+      - WHITELISTED_HEADERS
+      - ALLOWED_HOSTS
+      - DEBUG
+      - USE_STATSD
+      - STATSD_HOST
+      - STATSD_PORT

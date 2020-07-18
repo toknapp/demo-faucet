@@ -3,10 +3,6 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from decimal import Decimal
-
-
-from upvest.clientele import UpvestClienteleAPI
 
 
 def greylisted(address, ip):
@@ -34,55 +30,28 @@ class Faucet(models.Model):
     asset_id = models.UUIDField(unique=True)
     """ The ID of the asset in the Upvest API """
 
-    wallet_id = models.UUIDField()
-    """ The ID of the wallet in the Upvest API """
-
-    wallet_address = models.CharField(max_length=64)
-    """ The public address of the wallet """
-
     sending_amount = models.DecimalField(max_digits=40, decimal_places=15)
     """ How much of the asset should sent on each sending request """
 
     fee = models.DecimalField(max_digits=40, decimal_places=15)
     """ How much to set as the sending fee """
 
-    visible = models.BooleanField()
-    """ Whether to include this asset or not, useful to turn off an asset """
-
-    def send(self, receive_address, ip):
+    def send(self, wallet, receive_address, ip):
+        # record the request first to prevent too many requests
         DonationRequest.objects.create(address=receive_address, ip=ip)
 
-        wallet = self._get_wallet()
-        balance = self._get_balance()
-
+        balance = self.get_balance(wallet)
         # the internal representation is the more human-friendly decimal version
         # but the API accepts only whole integers
         quantity = int(self.sending_amount * (10 ** balance["exponent"]))
         fee = int(self.fee * (10 ** balance["exponent"]))
-        return wallet.transactions.create(settings.UPVEST_PASSWORD, str(self.asset_id), quantity, fee, receive_address)
+        return wallet.transactions.create(settings.UPVEST_PASSWORD, str(self.asset_id), quantity, fee, receive_address, asynchronous=True)
 
-    @property
-    def balance(self):
-        bal = self._get_balance()
-        balance = Decimal(bal["amount"]) / (10 ** bal["exponent"])
-        return balance.normalize()
-
-    def _get_balance(self):
-        wallet = self._get_wallet()
+    def get_balance(self, wallet):
         for bal in wallet.balances:
             if bal["asset_id"] == str(self.asset_id):
                 return bal
         raise ValueError("No balance for asset %s" % self.asset_id)
-
-    def _get_wallet(self):
-        api = UpvestClienteleAPI(
-            settings.UPVEST_OAUTH_CLIENT_ID,
-            settings.UPVEST_OAUTH_CLIENT_SECRET,
-            settings.UPVEST_USERNAME,
-            settings.UPVEST_PASSWORD,
-            base_url=settings.UPVEST_BACKEND,
-        )
-        return api.wallets.get(str(self.wallet_id))
 
     def __str__(self):
         visible = "visible" if self.visible else "not visible"
